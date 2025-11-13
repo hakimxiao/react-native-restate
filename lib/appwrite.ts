@@ -52,3 +52,13 @@ export async function login() {
         return false;
     }
 }
+
+export async function logout() {
+    try {
+        await account.deleteSession("current");
+        return true;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
+}
