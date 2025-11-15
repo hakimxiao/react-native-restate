@@ -1,6 +1,7 @@
 import {Account, Avatars, Client, OAuthProvider} from "react-native-appwrite";
 import * as Linking from 'expo-linking';
 import {openAuthSessionAsync} from "expo-web-browser";
+import * as WebBrowser from 'expo-web-browser';
 
 export const config = {
     platform: "com.jshkm.restate",
@@ -18,6 +19,8 @@ client
 export const avatar = new Avatars(client);
 export const account = new Account(client);
 
+WebBrowser.maybeCompleteAuthSession();
+
 export async function login() {
     try {
         const redirectUrl = Linking.createURL('/');
@@ -27,21 +30,18 @@ export async function login() {
             redirectUrl,
             );
 
-        if (!response) throw new Error("Failed to login");
+        if (!response) throw new Error("Create OAuth2 token failed");
 
         const browserResult = await openAuthSessionAsync(
             response.toString(),
             redirectUrl
         );
-
-        if(browserResult.type !== "success") throw new Error("Failed to login");
+        if(browserResult.type !== "success") throw new Error("Create OAuth2 token failed");
 
         const url = new URL(browserResult.url);
-
         const secret = url.searchParams.get("secret")?.toString();
         const userId = url.searchParams.get("userId")?.toString();
-
-        if(!secret || !userId) throw new Error("Failed to login");
+        if(!secret || !userId) throw new Error("Create OAuth2 token failed");
 
         const session = await account.createSession(userId, secret);
         if(!session) throw new Error("Failed to create a session");
@@ -63,7 +63,7 @@ export async function logout() {
     }
 }
 
-export async function getUser() {
+export async function getCurrentUser() {
     try {
         const response = await account.get();
         if(response.$id) {
